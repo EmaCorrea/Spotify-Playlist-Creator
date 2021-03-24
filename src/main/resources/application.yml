@@ -1,0 +1,21 @@
+spring:
+  profiles:
+    active: dev
+  batch:
+    job:
+      enabled: false
+#  config:
+#    use-legacy-processing: true
+  main:
+    allow-bean-definition-overriding: true
+
+#---
+#spring:
+#  profiles: dev
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    hikari:
+#      maxLifetime: 600000
+#    url: jdbc:mysql://${DB_HOST:localhost}/pds?sslMode=${MYSQL_SSL_MODE:PREFERRED}&enabledTLSProtocols=TLSv1.2&serverTimezone=UTC
+#    username: app
+#    password: P@55W0rd
