@@ -1,7 +1,6 @@
-package com.emacorrea.spc;
+package com.emacorrea.spc.config;
 
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.EnableSchedulerLock;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecutionException;
@@ -16,13 +15,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 @Configuration
 @EnableScheduling
-//@EnableSchedulerLock(defaultLockAtMostFor = "120m")
 @Slf4j
 public class BatchUpdatePlaylistConfig {
 
     @Bean
     public BatchUpdater batchUpdater(@Qualifier("jobLauncher") JobLauncher jobLauncher,
-                                       @Qualifier("updatePlaylistJob") Job job) {
+                                     @Qualifier("updatePlaylistJob") Job job) {
         return new BatchUpdater(jobLauncher, job);
     }
 
@@ -35,15 +33,14 @@ public class BatchUpdatePlaylistConfig {
             this.job = job;
         }
 
-//        @Scheduled(cron = "0 0 0 * * FRI")
-        @Scheduled(cron = "0 */1 * * * ?")
+//        @Scheduled(cron = "0 */1 * * * ?") // Used for testing purposes
+	    @Scheduled(cron = "0 0 0 * * FRI")
         @SchedulerLock(name = "updatePlaylist")
         public void updatePlaylist() {
             try {
                 log.info("Updating Spotify playlist...");
 
                 JobParameters jobParams = new JobParametersBuilder()
-//                        .addLong("currentTime", System.currentTimeMillis())
                         .addString("updatePlaylistJob", String.valueOf(System.currentTimeMillis()))
                         .toJobParameters();
                 jobLauncher.run(job, jobParams);
