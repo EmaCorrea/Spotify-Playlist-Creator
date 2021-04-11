@@ -23,5 +23,6 @@ public class AppConstants {
     public static final String MSG_NOT_FOUND = "Not Found";
     public static final String MSG_NOT_ACCEPTABLE = "Not Acceptable";
     public static final String MSG_INTERNAL_SERVER_ERROR = "Internal Server Error";
+    public static final String MSG_TOO_MANY_REQUESTS = "Internal Server Error";
 
 }

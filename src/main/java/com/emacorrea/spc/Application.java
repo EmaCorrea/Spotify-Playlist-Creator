@@ -27,6 +27,7 @@ import static org.springframework.web.reactive.function.server.ServerResponse.te
 // TODO: Add task executor set to job launcher
 // TODO: Update swagger UI
 // TODO: Create Postman suite for this api
+// TODO: Set up docker-compose
 @Slf4j
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class})

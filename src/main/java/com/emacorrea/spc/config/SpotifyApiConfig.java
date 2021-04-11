@@ -20,7 +20,9 @@ public class SpotifyApiConfig {
     @Value("${spotify.api.playlistId}")
     private String playlistId;
 
-    public void test() {
-        String test = "test";
-    }
+    @Value("${spotify.baseUri}")
+    private String baseUri;
+
+    @Value("${spotify.authUri}")
+    private String authUri;
 }
