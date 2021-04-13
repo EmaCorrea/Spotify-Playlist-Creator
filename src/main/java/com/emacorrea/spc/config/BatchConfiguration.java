@@ -3,7 +3,6 @@ package com.emacorrea.spc.config;
 import com.emacorrea.spc.batch.updateplaylist.UpdatePlaylistJobListener;
 import com.emacorrea.spc.batch.updateplaylist.UpdatePlaylistTasklet;
 import com.emacorrea.spc.service.SpotifyApiService;
-import com.emacorrea.spc.service.SpotifyApiService2;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -40,10 +39,7 @@ public class BatchConfiguration {
     private SpotifyApiConfig spotifyApiConfig;
 
     @Autowired
-    private SpotifyApiService spotifyApiService;
-
-    @Autowired
-    private SpotifyApiService2 spotifyApiService2;
+    private SpotifyApiService spotifyApiService2;
 
     @Bean
     public Job updatePlaylistJob() {
@@ -64,7 +60,7 @@ public class BatchConfiguration {
 
     @Bean
     public UpdatePlaylistTasklet updatePlaylistTasklet() {
-        return new UpdatePlaylistTasklet(spotifyApiService, spotifyApiService2);
+        return new UpdatePlaylistTasklet(spotifyApiService2);
     }
 
 }

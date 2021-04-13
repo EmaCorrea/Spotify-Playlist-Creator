@@ -2,15 +2,11 @@ package com.emacorrea.spc.rest;
 
 import com.emacorrea.spc.AppConstants;
 import com.emacorrea.spc.service.SpotifyApiService;
-import com.emacorrea.spc.service.SpotifyApiService2;
-import com.wrapper.spotify.exceptions.detailed.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import model.TopTracksResponse;
-import model.Track2;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +15,6 @@ import spotify.SpotifyTopTracksResponse;
 import spotify.SpotifyUpdatePlaylistResponse;
 
 import javax.validation.Valid;
-import javax.websocket.server.PathParam;
 //import javax.websocket.server.PathParam;
 
 // TODO: Create response handler
@@ -31,7 +26,7 @@ import javax.websocket.server.PathParam;
 public class Controller {
 
     private final SpotifyApiService spotifyApiService;
-    private final SpotifyApiService2 spotifyApiService2;
+    private final SpotifyApiService spotifyApiService2;
 
     /**
      * Returns a list of the user's top tracks in Spotify
@@ -51,7 +46,7 @@ public class Controller {
     })
     @GetMapping("/toptracks")
     public Mono<SpotifyTopTracksResponse> getTopTracks() {
-        return spotifyApiService2.getusersTopTracks();
+        return spotifyApiService2.getUsersTopTracks();
     }
 
     // TODO: Change to post

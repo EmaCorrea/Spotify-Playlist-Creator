@@ -1,7 +1,6 @@
 package com.emacorrea.spc.batch.updateplaylist;
 
 import com.emacorrea.spc.service.SpotifyApiService;
-import com.emacorrea.spc.service.SpotifyApiService2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -18,42 +17,24 @@ import java.util.stream.Collectors;
 @Slf4j
 public class UpdatePlaylistTasklet implements Tasklet {
 
-    private SpotifyApiService spotifyApiService;
-    private SpotifyApiService2 spotifyApiService2;
+    private SpotifyApiService spotifyApiService2;
 
     @Autowired
-    public UpdatePlaylistTasklet(@NotNull SpotifyApiService spotifyApiService,
-                                 @NotNull SpotifyApiService2 spotifyApiService2) {
-        this.spotifyApiService = spotifyApiService;
+    public UpdatePlaylistTasklet(@NotNull SpotifyApiService spotifyApiService2) {
         this.spotifyApiService2 = spotifyApiService2;
     }
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-//        Mono<String> topTracksResponse = spotifyApiService.getUsersTopTracksUris();
-//
-//        topTracksResponse
-//                .doOnNext(itemUris -> spotifyApiService.replacePlaylistItems(itemUris))
-//                .doOnSuccess(r -> log.info("Successfully replaced playlist items"))
-//                .doOnError(e -> log.error("Error replacing playlist items: {}", e.getMessage()))
-//                .subscribe();
-//
-//        return RepeatStatus.FINISHED;
-
-//        if(trackPaging != null) {
-//            return Arrays.stream(trackPaging.getItems())
-//                    .map(track ->   track.getUri())
-//                    .collect(Collectors.joining(","));
-
-        Mono<SpotifyTopTracksResponse> topTracksResponse = spotifyApiService2.getusersTopTracks();
+        Mono<SpotifyTopTracksResponse> topTracksResponse = spotifyApiService2.getUsersTopTracks();
 
         topTracksResponse
                 .doOnSuccess(t -> {
                     String test = Arrays.stream(t.getItems())
-                            .map(r -> r.getUri())
+                            .map(r -> r.getTrackUri())
                             .collect(Collectors.joining(","));
                     spotifyApiService2.updatePlaylist(test)
-                            .doOnSuccess(s -> log.info("Successfully replaced playlist items: {}", s.getSnapshot_id()))
+                            .doOnSuccess(s -> log.info("Successfully replaced playlist items: {}", s.getSnapshotId()))
                             .doOnError(e -> log.error("Error replacing playlist items: {}", e.getMessage()))
                             .subscribe();
                 })

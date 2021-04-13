@@ -1,6 +1,7 @@
 package spotify;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-//@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SpotifyTopTracksResponse {
 
     private Item[] items;
@@ -20,17 +21,20 @@ public class SpotifyTopTracksResponse {
     @NoArgsConstructor
     public static class Item {
         public Artist[] artists;
-        public String name;
-        public String uri;
 
-        public void test() {
-            System.out.println("");
-        }
+        @JsonProperty("name")
+        public String trackName;
+
+        @JsonProperty("uri")
+        public String trackUri;
     }
 
     @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class Artist {
-        public String name;
+        @JsonProperty("name")
+        public String artistName;
     }
 
 }

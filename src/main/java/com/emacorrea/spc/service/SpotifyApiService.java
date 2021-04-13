@@ -1,183 +1,121 @@
 package com.emacorrea.spc.service;
 
 import com.emacorrea.spc.config.SpotifyApiConfig;
-import com.wrapper.spotify.SpotifyApi;
-import com.wrapper.spotify.exceptions.SpotifyWebApiException;
-import com.wrapper.spotify.model_objects.credentials.AuthorizationCodeCredentials;
-import com.wrapper.spotify.model_objects.specification.Paging;
-import com.wrapper.spotify.model_objects.specification.Track;
-import com.wrapper.spotify.requests.authorization.authorization_code.AuthorizationCodeRefreshRequest;
-import com.wrapper.spotify.requests.data.personalization.simplified.GetUsersTopTracksRequest;
-import com.wrapper.spotify.requests.data.playlists.ReplacePlaylistsItemsRequest;
+import com.emacorrea.spc.exception.*;
 import lombok.extern.slf4j.Slf4j;
-import model.TopTracksResponse;
-import org.apache.hc.core5.http.ParseException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.ClientResponse;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import spotify.SpotifyApiErrorResponse;
+import spotify.SpotifyAuthResponse;
+import spotify.SpotifyTopTracksResponse;
+import spotify.SpotifyUpdatePlaylistResponse;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.time.Duration;
 
 @Service
 @Slf4j
 public class SpotifyApiService {
 
     private final SpotifyApiConfig spotifyApiConfig;
+    private final WebClient.Builder builder;
+    private final WebClient authorizationClient;
 
-    private SpotifyApi spotifyApi;
-    private AuthorizationCodeRefreshRequest authorizationCodeRefreshRequest;
-    private AuthorizationCodeCredentials authorizationCodeCredentials;
+    private WebClient client;
 
-    @Autowired
-    public SpotifyApiService(SpotifyApiConfig spotifyApiConfig) {
+    public SpotifyApiService(SpotifyApiConfig spotifyApiConfig, WebClient.Builder builder) {
         this.spotifyApiConfig = spotifyApiConfig;
-    }
+        this.builder = builder;
 
-    public Mono<TopTracksResponse> getUsersTopTracks() {
-        try {
-            authorizationCodeRefresh();
-
-            GetUsersTopTracksRequest getUsersTopTracksRequest = spotifyApi.getUsersTopTracks()
-                    .limit(20)
-                    .time_range("short_term")
-                    .build();
-
-            Paging<Track> trackPaging = getUsersTopTracksRequest.execute();
-
-            if(trackPaging != null) {
-                TopTracksResponse tracks = requestUsersTopTracksNames(trackPaging);
-
-                return Mono.just(tracks)
-                        .doOnNext(r -> {
-                            log.info("Successfully retrieved top tracks");
-                            if("".equals(tracks)) {
-                                log.info("No top tracks available");
-                            }
-                        })
-                        .doOnError(e -> log.error("Error retrieving top tracks: {}", e.getMessage()));
-            }
-        } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.error("Error replacing playlist items: {}", e.getMessage());
-        }
-        return Mono.empty();
-    }
-
-    public Mono<String> getUsersTopTracksUris() {
-        authorizationCodeRefresh();
-
-        final String itemUris = requestUsersTopTracks();
-
-        return Mono.just(itemUris)
-                .doOnNext(t -> {
-                    log.info("Successfully retrieved top tracks");
-                    if("".equals(t)) {
-                        log.info("No top tracks available");
-                    }
+        authorizationClient = builder.clone()
+                .baseUrl(spotifyApiConfig.getAuthUri())
+                .defaultHeaders(header -> {
+                    header.setBasicAuth(spotifyApiConfig.getClientId(), spotifyApiConfig.getClientSecret());
+                    header.setContentType(MediaType.valueOf(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
                 })
-                .doOnError(e -> log.error("Error retrieving top tracks: {}", e.getMessage()));
+                .build();
+
+        authorizationCodeRefresh();
     }
 
-    public Mono<String> replacePlaylistItems(String itemUris) {
-        try {
-            authorizationCodeRefresh();
+    public Mono<SpotifyTopTracksResponse> getUsersTopTracks() {
+        authorizationCodeRefresh();
+        return client.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/v1/me/top/tracks")
+                        .queryParam("time_range", "short_term")
+                        .queryParam("limit", "20")
+                        .build())
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, SpotifyApiService::mapError)
+                .bodyToMono(SpotifyTopTracksResponse.class)
+                .retryWhen(retrySpec());
+    }
 
-            ReplacePlaylistsItemsRequest replacePlaylistsItemsRequest = spotifyApi
-                    .replacePlaylistsItems(spotifyApiConfig.getPlaylistId(), itemUris.split(","))
-                    .build();
-
-            String response = replacePlaylistsItemsRequest.execute();
-
-            return Mono.just(response)
-                    .doOnNext(r -> {
-                        if("".equals(response)) {
-                            log.info("Playlist could not be updated");
-                        } else {
-                            log.info("Successfully replaced playlist items");
-                        }
-                    })
-                    .doOnError(e -> log.error("Error replacing playlist items: {}", e.getMessage()));
-        } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.error("Error replacing playlist items: {}", e.getMessage());
-        }
-        return Mono.empty();
+    public Mono<SpotifyUpdatePlaylistResponse> updatePlaylist(String uris) {
+        authorizationCodeRefresh();
+        return client.put()
+                .uri(uriBuilder -> uriBuilder
+                        .path(String.format("/v1/playlists/%s/tracks", spotifyApiConfig.getPlaylistId()))
+                        .queryParam("uris", uris)
+//                        .queryParam("limit", "20")
+                        .build())
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, SpotifyApiService::mapError)
+                .bodyToMono(SpotifyUpdatePlaylistResponse.class)
+                .retryWhen(retrySpec());
     }
 
     private void authorizationCodeRefresh() {
-        try {
-            spotifyApi = new SpotifyApi.Builder()
-                    .setClientId(spotifyApiConfig.getClientId())
-                    .setClientSecret(spotifyApiConfig.getClientSecret())
-                    .setRefreshToken(spotifyApiConfig.getRefreshToken())
+        MultiValueMap bodyMap = new LinkedMultiValueMap();
+        bodyMap.add("grant_type", "refresh_token");
+        bodyMap.add("refresh_token", spotifyApiConfig.getRefreshToken());
+
+        Mono<SpotifyAuthResponse> response = authorizationClient.post()
+                .uri("/api/token")
+                .body(BodyInserters.fromFormData(bodyMap))
+                .retrieve()
+                .bodyToMono(SpotifyAuthResponse.class);
+
+        response.subscribe(t -> {
+            client = builder.clone()
+                    .baseUrl(spotifyApiConfig.getBaseUri())
+                    .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + t.getAccessToken())
                     .build();
-
-            authorizationCodeRefreshRequest = spotifyApi.authorizationCodeRefresh()
-                    .build();
-
-            authorizationCodeCredentials = authorizationCodeRefreshRequest.execute();
-
-            // Set access and refresh token for further "spotifyApi" object usage
-            spotifyApi.setAccessToken(authorizationCodeCredentials.getAccessToken());
-
-            log.info("Expires in: {}ms", authorizationCodeCredentials.getExpiresIn());
-        } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.error("Error requesting authorization code credentials: {}", e.getMessage());
-        }
-    }
-
-    private String requestUsersTopTracks() {
-        try {
-            GetUsersTopTracksRequest getUsersTopTracksRequest = spotifyApi.getUsersTopTracks()
-                    .limit(20)
-                    .time_range("short_term")
-                    .build();
-
-            Paging<Track> trackPaging = getUsersTopTracksRequest.execute();
-
-            if(trackPaging != null) {
-                return Arrays.stream(trackPaging.getItems())
-                        .map(track ->   track.getUri())
-                        .collect(Collectors.joining(","));
-            }
-        } catch (IOException | SpotifyWebApiException | ParseException e) {
-            log.error("Error requesting user's top tracks: " + e.getMessage());
-        }
-        return "";
-    }
-
-    private TopTracksResponse requestUsersTopTracksNames(Paging<Track> trackPaging) {
-        AtomicInteger counter = new AtomicInteger(0);
-
-        // Logging top tracks
-        String trackNames = String.format("Top Tracks: %s", Arrays.stream(trackPaging.getItems())
-                .map(track -> {
-                    counter.getAndIncrement();
-                    return String.format("\n%d. %s - %s", counter.get(), track.getArtists()[0].getName(), track.getName());
-                })
-                .collect(Collectors.joining(" | "))
-        );
-
-        log.info(trackNames);
-
-        Map<String, TopTracksResponse.Track> topTracksMap = new HashMap<>();
-
-        // Creating top tracks response
-        Arrays.stream(trackPaging.getItems()).forEach(track -> {
-            if(topTracksMap.containsKey(track.getArtists()[0].getName())) {
-                topTracksMap.get(track.getArtists()[0].getName()).getTracks().add(track.getName());
-            } else {
-                topTracksMap.put(
-                        track.getArtists()[0].getName(),
-                        new TopTracksResponse.Track(new ArrayList<>(Arrays.asList(track.getName())))
-                );
-            }
         });
-
-        return TopTracksResponse.builder()
-                .artists(topTracksMap)
-                .build();
     }
 
+    private static Mono<? extends Throwable> mapError(final ClientResponse response) {
+        return response.bodyToMono(SpotifyApiErrorResponse.class)
+                .doOnNext(err -> log.error("Error calling Spotify: {}", err.getError().getMessage()))
+                .flatMap(err -> {
+                    final String errorMsg = err.getError().getMessage();
+                    switch (err.getError().getStatus()) {
+                        case 400: return Mono.error(new BadRequestException(errorMsg));
+                        case 401: return Mono.error(new UnauthorizedException(errorMsg));
+                        case 403: return Mono.error(new ForbiddenException(errorMsg));
+                        case 404: return Mono.error(new NotFoundException(errorMsg));
+                        case 429: return Mono.error(new TooManyRequestsException(errorMsg));
+                        default: return Mono.error(new InternalServerErrorException(errorMsg));
+                    }
+                }
+                );
+    }
+
+    private static Retry retrySpec() {
+        return Retry.fixedDelay(3, Duration.ofSeconds(1))
+                .filter(throwable -> throwable instanceof WebClientResponseException &&
+                        ((WebClientResponseException) throwable).getStatusCode().is5xxServerError());
+    }
 }

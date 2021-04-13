@@ -5,6 +5,7 @@ buildscript {
 		lombokVersion = '1.18.+'
 		spotifyWebApiVersion = '6.5.+'
 		springfoxVersion = '3.0.+'
+		okhttpVersion = '4.9.+'
 	}
 }
 
@@ -26,10 +27,6 @@ dependencies {
 	annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
 	compileOnly "org.projectlombok:lombok:$lombokVersion"
-//	compileOnly "se.michaelthelin.spotify:spotify-web-api-java:$spotifyWebApiVersion"
-
-//	implementation group: 'se.michaelthelin.spotify', name: 'spotify-web-api-java', version: '6.5.2'
-	implementation "se.michaelthelin.spotify:spotify-web-api-java:$spotifyWebApiVersion"
 
 	// Spring Boot
 	implementation 'org.springframework.boot:spring-boot-starter'
@@ -54,10 +51,11 @@ dependencies {
 
 	testCompileOnly "org.projectlombok:lombok:$lombokVersion"
 
-//	testCompileOnly "se.michaelthelin.spotify:spotify-web-api-java:$spotifyWebApiVersion"
-
+	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation "org.springframework.batch:spring-batch-test"
+	testImplementation "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
+	testImplementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
 }
 
 test {

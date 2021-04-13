@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -15,7 +16,9 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SpotifyApiErrorResponse {
 
-    private Map<String, Error> error;
+//    private Map<String, Error> error;
+//    private List<Error> error;
+    private Error error;
 
     @Data
     public static class Error {
