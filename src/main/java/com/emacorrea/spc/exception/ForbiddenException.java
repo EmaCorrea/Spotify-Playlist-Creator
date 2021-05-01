@@ -14,4 +14,9 @@ public class ForbiddenException extends ApiException {
     public ForbiddenException(final String msg) {
         super(HttpStatus.FORBIDDEN, msg);
     }
+
+    public ForbiddenException() {
+        super(HttpStatus.FORBIDDEN.value());
+    }
+
 }

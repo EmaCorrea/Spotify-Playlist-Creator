@@ -13,6 +13,7 @@ plugins {
 	id 'org.springframework.boot' version "$springBootVersion"
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'pmd'
 }
 
 group = 'com.emacorrea'
@@ -60,4 +61,11 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+}
+
+pmd {
+	ignoreFailures  = false // Evaluation must pass
+	pmdTest.enabled = false // Disable quality checks on unit test code
+	ruleSetFiles = files("config/pmd/ruleset.xml") // rules to be executed are loaded from file
+	ruleSets = []
 }

@@ -9,4 +9,9 @@ public class TooManyRequestsException  extends ApiException {
     public TooManyRequestsException(final String msg) {
         super(HttpStatus.TOO_MANY_REQUESTS, msg);
     }
+
+    public TooManyRequestsException() {
+        super(HttpStatus.TOO_MANY_REQUESTS.value());
+    }
+
 }

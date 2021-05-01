@@ -7,7 +7,9 @@ import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobInstance;
 import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.launch.JobExecutionNotRunningException;
 import org.springframework.batch.core.launch.JobOperator;
+import org.springframework.batch.core.launch.NoSuchJobExecutionException;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.test.MetaDataInstanceFactory;
 
@@ -19,8 +21,7 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class UpdatePlaylistJobListenerTest {
     private UpdatePlaylistJobListener updatePlaylistJobListener;
@@ -53,7 +54,7 @@ public class UpdatePlaylistJobListenerTest {
     }
 
     @Test
-    public void testNoStoppedRunningJobs() {
+    public void testStoppedCurrentJob() {
         JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
         JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
 
@@ -77,7 +78,39 @@ public class UpdatePlaylistJobListenerTest {
     }
 
     @Test
-    public void testStoppedRunningJobs() {
+    public void testStoppedCurrentJobException() throws NoSuchJobExecutionException, JobExecutionNotRunningException {
+        JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
+        JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
+
+        jobExecution1.setId(1L);
+        jobExecution1.setStartTime(new Date());
+
+        jobExecution2.setId(2L);
+        jobExecution2.setStartTime(new Date());
+
+        final Set<JobExecution> jobExecutions = Set.of(
+                jobExecution1,
+                jobExecution2
+        );
+
+        when(jobExplorer.findRunningJobExecutions(anyString())).thenReturn(jobExecutions);
+        doThrow(new NoSuchJobExecutionException("error")).when(jobOperator).stop(anyLong());
+
+        updatePlaylistJobListener.beforeJob(jobExecution);
+        updatePlaylistJobListener.afterJob(jobExecution);
+
+        assertEquals(BatchStatus.STARTING, jobExecution.getStatus());
+
+        doThrow(new JobExecutionNotRunningException("error")).when(jobOperator).stop(anyLong());
+
+        updatePlaylistJobListener.beforeJob(jobExecution);
+        updatePlaylistJobListener.afterJob(jobExecution);
+
+        assertEquals(BatchStatus.STARTING, jobExecution.getStatus());
+    }
+
+    @Test
+    public void testStoppedStalledJob() {
         JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
         JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
 
@@ -110,4 +143,5 @@ public class UpdatePlaylistJobListenerTest {
         assertTrue("STOPPED".equals(jobExecution2.getExitStatus().getExitCode()) &&
                 "Job was stalled or interrupted and has been stopped.".equals(jobExecution2.getExitStatus().getExitDescription()));
     }
+
 }

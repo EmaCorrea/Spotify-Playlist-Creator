@@ -1,7 +1,6 @@
 package com.emacorrea.spc.batch.updateplaylist;
 
 import com.emacorrea.spc.config.SpotifyApiConfig;
-import com.emacorrea.spc.exception.BadRequestException;
 import com.emacorrea.spc.service.SpotifyApiService;
 import org.junit.jupiter.api.*;
 import org.springframework.batch.core.StepContribution;
@@ -76,9 +75,18 @@ public class UpdatePlaylistTaskletTest {
     }
 
     @Test
-    public void testExecuteUpdatePlaylistResponseError() {
+    public void testExecuteGetUsersTopTracksResponseError() {
+        doReturn(Mono.error(new Exception("error"))).when(spotifyApiService).getUsersTopTracks();
 
-        doThrow(new BadRequestException("error")).when(spotifyApiService).updatePlaylist(anyString());
+        RepeatStatus actualStatus = tasklet.execute(contribution, chunkContext);
+        verify(spotifyApiService, times(1)).getUsersTopTracks();
+        verify(spotifyApiService, never()).updatePlaylist(anyString());
+        Assertions.assertEquals(RepeatStatus.FINISHED, actualStatus);
+    }
+
+    @Test
+    public void testExecuteUpdatePlaylistResponseError() {
+        doReturn(Mono.error(new Exception("error"))).when(spotifyApiService).updatePlaylist(anyString());
 
         RepeatStatus actualStatus = tasklet.execute(contribution, chunkContext);
         verify(spotifyApiService, times(1)).updatePlaylist(anyString());

@@ -14,5 +14,9 @@ public class BadRequestException extends ApiException {
     public BadRequestException(final String msg) {
         super(HttpStatus.BAD_REQUEST, msg);
     }
+
+    public BadRequestException() {
+        super(HttpStatus.BAD_REQUEST.value());
+    }
 }
 

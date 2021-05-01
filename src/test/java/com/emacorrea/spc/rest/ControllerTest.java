@@ -1,9 +1,12 @@
 package com.emacorrea.spc.rest;
 
-import com.emacorrea.spc.exception.BadRequestException;
+import com.emacorrea.spc.exception.*;
 import com.emacorrea.spc.service.SpotifyApiService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
@@ -17,6 +20,8 @@ import reactor.core.publisher.Mono;
 import spotify.SpotifyTopTracksResponse;
 import spotify.SpotifyUpdatePlaylistResponse;
 
+import java.util.stream.Stream;
+
 import static org.mockito.Mockito.*;
 
 @SpringJUnitConfig({
@@ -26,6 +31,8 @@ import static org.mockito.Mockito.*;
 @Import(SpotifyApiService.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ControllerTest {
+
+    private static final String SPOTIFY_TRACK_URI = "spotify:track:123456789";
 
     @MockBean
     private SpotifyApiService spotifyApiService;
@@ -59,22 +66,15 @@ public class ControllerTest {
         verify(spotifyApiService, times(1)).getUsersTopTracks();
     }
 
-    @Test
-    public void testGetUsersTopTracksNotFoundError() {
-        webClient.get()
-                .uri("/api/v1/toptracks1")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
+    @ParameterizedTest(name = "{displayName} #{index}: {arguments}")
+    @MethodSource("testEndpointsArgsProvider")
+    public void testGetUsersTopTracksErrorResponses(Mono<Object> exception, HttpStatus httpStatus) {
+        doReturn(exception).when(spotifyApiService).getUsersTopTracks();
 
-        verify(spotifyApiService, never()).getUsersTopTracks();
-    }
-
-    @Test
-    public void testGetUsersTopTracksInternalServerError() {
         webClient.get()
                 .uri("/api/v1/toptracks")
                 .exchange()
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+                .expectStatus().isEqualTo(httpStatus);
 
         verify(spotifyApiService, times(1)).getUsersTopTracks();
     }
@@ -88,7 +88,7 @@ public class ControllerTest {
         when(spotifyApiService.updatePlaylist(anyString())).thenReturn(Mono.just(expectedSpotifyUpdatePlaylistResponse));
 
         webClient.get()
-                .uri(String.format("/api/v1/updateplaylist?itemUris=%s", "spotify:track:123456789"))
+                .uri(String.format("/api/v1/updateplaylist?itemUris=%s", SPOTIFY_TRACK_URI))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
@@ -98,24 +98,28 @@ public class ControllerTest {
         verify(spotifyApiService, times(1)).updatePlaylist(anyString());
     }
 
-    @Test
-    public void testUpdatePlaylistNotFoundError() {
-        webClient.get()
-                .uri(String.format("/api/v1/updateplaylist1?itemUris=%s", "spotify:track:123456789"))
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.NOT_FOUND);
+    @ParameterizedTest(name = "{displayName} #{index}: {arguments}")
+    @MethodSource("testEndpointsArgsProvider")
+    public void testUpdatePlaylistErrorResponses(Mono<Object> exception, HttpStatus httpStatus) {
+        doReturn(exception).when(spotifyApiService).updatePlaylist(anyString());
 
-        verify(spotifyApiService, never()).updatePlaylist(anyString());
-    }
-
-    @Test
-    public void testUpdatePlaylistInternalServerError() {
         webClient.get()
-                .uri(String.format("/api/v1/updateplaylist?itemUris=%s", "spotify:track:123456789"))
+                .uri(String.format("/api/v1/updateplaylist?itemUris=%s", SPOTIFY_TRACK_URI))
                 .exchange()
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+                .expectStatus().isEqualTo(httpStatus);
 
         verify(spotifyApiService, times(1)).updatePlaylist(anyString());
+    }
+
+    private static Stream<Arguments> testEndpointsArgsProvider() {
+        return Stream.of(
+                Arguments.arguments(Mono.error(BadRequestException::new), HttpStatus.BAD_REQUEST),
+                Arguments.arguments(Mono.error(UnauthorizedException::new), HttpStatus.UNAUTHORIZED),
+                Arguments.arguments(Mono.error(ForbiddenException::new), HttpStatus.FORBIDDEN),
+                Arguments.arguments(Mono.error(NotFoundException::new), HttpStatus.NOT_FOUND),
+                Arguments.arguments(Mono.error(TooManyRequestsException::new), HttpStatus.TOO_MANY_REQUESTS),
+                Arguments.arguments(Mono.error(Exception::new), HttpStatus.INTERNAL_SERVER_ERROR)
+        );
     }
 
 }

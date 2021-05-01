@@ -14,4 +14,9 @@ public class UnauthorizedException extends ApiException {
     public UnauthorizedException(final String msg) {
         super(HttpStatus.UNAUTHORIZED, msg);
     }
+
+    public UnauthorizedException() {
+        super(HttpStatus.UNAUTHORIZED.value());
+    }
+
 }
