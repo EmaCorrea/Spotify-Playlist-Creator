@@ -28,8 +28,8 @@ public class UpdatePlaylistJobListener implements JobExecutionListener {
     private static final int MAX_NUMBER_RUNNING_JOBS = 1;
 
     private final JobExplorer jobExplorer;
-    private final JobRepository jobRepository;
     private final JobOperator jobOperator;
+    private final JobRepository jobRepository;
 
     @Override
     public void beforeJob(JobExecution jobExecution) {

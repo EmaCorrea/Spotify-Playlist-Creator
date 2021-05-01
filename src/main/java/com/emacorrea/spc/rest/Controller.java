@@ -7,6 +7,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,18 +16,17 @@ import spotify.SpotifyTopTracksResponse;
 import spotify.SpotifyUpdatePlaylistResponse;
 
 import javax.validation.Valid;
-//import javax.websocket.server.PathParam;
 
-// TODO: Create response handler
+// TODO: Create error response handler
 @Api(tags = "Spotify Playlist Creator API")
 @RestController
 @RequestMapping(path = "/api/v1/", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 @Validated
+@Slf4j
 public class Controller {
 
     private final SpotifyApiService spotifyApiService;
-    private final SpotifyApiService spotifyApiService2;
 
     /**
      * Returns a list of the user's top tracks in Spotify
@@ -46,10 +46,11 @@ public class Controller {
     })
     @GetMapping("/toptracks")
     public Mono<SpotifyTopTracksResponse> getTopTracks() {
-        return spotifyApiService2.getUsersTopTracks();
+        return spotifyApiService.getUsersTopTracks()
+                .doOnSuccess(response -> log.info("Successfully retrieved user's top tracks: {}", response.toString()))
+                .doOnError(error -> log.error("Error retrieving user's top tracks: {}", error.getMessage()));
     }
 
-    // TODO: Change to post
     /**
      * Returns confirmation that a Spotify playlist's items were replaces/updated
      * @return playlist replacement confirmation
@@ -69,7 +70,9 @@ public class Controller {
     @GetMapping("/updateplaylist")
     public Mono<SpotifyUpdatePlaylistResponse> updatePlaylist(
             @Valid @RequestParam final String itemUris) {
-        return spotifyApiService2.updatePlaylist(itemUris);
+        return spotifyApiService.updatePlaylist(itemUris)
+                .doOnSuccess(response -> log.info("Successfully replaced playlist items: {}", response.getSnapshotId()))
+                .doOnError(error -> log.error("Error replacing playlist items: {}", error.getMessage()));
     }
 
     // TODO: Add an endpoint to retrieve the current weekly top tracks playlist

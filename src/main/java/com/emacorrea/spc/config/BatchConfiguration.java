@@ -39,13 +39,13 @@ public class BatchConfiguration {
     private SpotifyApiConfig spotifyApiConfig;
 
     @Autowired
-    private SpotifyApiService spotifyApiService2;
+    private SpotifyApiService spotifyApiService;
 
     @Bean
     public Job updatePlaylistJob() {
         return jobBuilderFactory.get("updatePlaylistJob")
                 .incrementer(new RunIdIncrementer())
-                .listener(new UpdatePlaylistJobListener(jobExplorer, jobRepo, jobOperator))
+                .listener(new UpdatePlaylistJobListener(jobExplorer, jobOperator, jobRepo))
                 .preventRestart()
                 .start(updatePlaylistStep())
                 .build();
@@ -60,7 +60,7 @@ public class BatchConfiguration {
 
     @Bean
     public UpdatePlaylistTasklet updatePlaylistTasklet() {
-        return new UpdatePlaylistTasklet(spotifyApiService2);
+        return new UpdatePlaylistTasklet(spotifyApiService);
     }
 
 }

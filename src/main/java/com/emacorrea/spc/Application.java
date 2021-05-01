@@ -28,6 +28,7 @@ import static org.springframework.web.reactive.function.server.ServerResponse.te
 // TODO: Update swagger UI
 // TODO: Create Postman suite for this api
 // TODO: Set up docker-compose
+// TODO: Remove JDBC libs
 @Slf4j
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class})
