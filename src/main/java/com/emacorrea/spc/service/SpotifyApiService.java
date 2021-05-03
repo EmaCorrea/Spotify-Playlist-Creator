@@ -15,19 +15,19 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-import spotify.SpotifyApiErrorResponse;
-import spotify.SpotifyAuthResponse;
-import spotify.SpotifyTopTracksResponse;
-import spotify.SpotifyUpdatePlaylistResponse;
+import com.emacorrea.spc.spotify.SpotifyApiErrorResponse;
+import com.emacorrea.spc.spotify.SpotifyAuthResponse;
+import com.emacorrea.spc.spotify.SpotifyTopTracksResponse;
+import com.emacorrea.spc.spotify.SpotifyUpdatePlaylistResponse;
 
 import java.time.Duration;
 @Slf4j
 @Service
 public class SpotifyApiService {
 
-    private SpotifyApiConfig spotifyApiConfig;
-    private WebClient.Builder builder;
-    private WebClient authorizationClient;
+    private final SpotifyApiConfig spotifyApiConfig;
+    private final WebClient.Builder builder;
+//    private WebClient authorizationClient;
 
     private WebClient spotifyClient;
 
@@ -35,13 +35,13 @@ public class SpotifyApiService {
         this.spotifyApiConfig = spotifyApiConfig;
         this.builder = builder;
 
-        authorizationClient = builder.clone()
-                .baseUrl(spotifyApiConfig.getAuthUri())
-                .defaultHeaders(header -> {
-                    header.setBasicAuth(spotifyApiConfig.getClientId(), spotifyApiConfig.getClientSecret());
-                    header.setContentType(MediaType.valueOf(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
-                })
-                .build();
+//        authorizationClient = builder.clone()
+//                .baseUrl(spotifyApiConfig.getAuthUri())
+//                .defaultHeaders(header -> {
+//                    header.setBasicAuth(spotifyApiConfig.getClientId(), spotifyApiConfig.getClientSecret());
+//                    header.setContentType(MediaType.valueOf(MediaType.APPLICATION_FORM_URLENCODED_VALUE));
+//                })
+//                .build();
     }
 
     public Mono<SpotifyTopTracksResponse> getUsersTopTracks() {
@@ -73,9 +73,9 @@ public class SpotifyApiService {
     }
 
     private void authorizationCodeRefresh() {
-        RestTemplate restTemplate = new RestTemplate();
+        final RestTemplate restTemplate = new RestTemplate();
 
-        UriComponents uriComponents = UriComponentsBuilder.newInstance()
+        final UriComponents uriComponents = UriComponentsBuilder.newInstance()
                 .scheme(spotifyApiConfig.getScheme())
                 .host(spotifyApiConfig.getAuthUri())
                 .path("/api/token")
@@ -83,11 +83,11 @@ public class SpotifyApiService {
                 .queryParam("limit", "20")
                 .build();
 
-        MultiValueMap bodyMap = new LinkedMultiValueMap();
+        final MultiValueMap bodyMap = new LinkedMultiValueMap();
         bodyMap.add("grant_type", "refresh_token");
         bodyMap.add("refresh_token", spotifyApiConfig.getRefreshToken());
 
-        ResponseEntity<SpotifyAuthResponse> responseEntity = restTemplate.exchange(uriComponents.toUriString(),
+        final ResponseEntity<SpotifyAuthResponse> responseEntity = restTemplate.exchange(uriComponents.toUriString(),
                 HttpMethod.POST,
                 new HttpEntity<>(bodyMap, getSpotifyAuthClientHeaders()),
                 SpotifyAuthResponse.class);

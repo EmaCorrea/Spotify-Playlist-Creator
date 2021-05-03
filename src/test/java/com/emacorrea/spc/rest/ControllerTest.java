@@ -7,8 +7,17 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mockito;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.JobExecution;
+import org.springframework.batch.core.JobParameters;
+import org.springframework.batch.core.JobParametersInvalidException;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.batch.core.repository.JobExecutionAlreadyRunningException;
+import org.springframework.batch.core.repository.JobInstanceAlreadyCompleteException;
+import org.springframework.batch.core.repository.JobRestartException;
+import org.springframework.batch.test.MetaDataInstanceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -17,8 +26,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
-import spotify.SpotifyTopTracksResponse;
-import spotify.SpotifyUpdatePlaylistResponse;
+import com.emacorrea.spc.spotify.SpotifyTopTracksResponse;
+import com.emacorrea.spc.spotify.SpotifyUpdatePlaylistResponse;
 
 import java.util.stream.Stream;
 
@@ -32,7 +41,15 @@ import static org.mockito.Mockito.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class ControllerTest {
 
-    private static final String SPOTIFY_TRACK_URI = "spotify:track:123456789";
+    private static final String SPOTIFY_TRACK_URI = "com.emacorrea.spc.spotify:track:123456789";
+
+    @MockBean
+    @Qualifier("asyncJobLauncher")
+    private JobLauncher jobLauncher;
+
+    @MockBean
+    @Qualifier("updatePlaylistJob")
+    private Job job;
 
     @MockBean
     private SpotifyApiService spotifyApiService;
@@ -120,6 +137,26 @@ public class ControllerTest {
                 Arguments.arguments(Mono.error(TooManyRequestsException::new), HttpStatus.TOO_MANY_REQUESTS),
                 Arguments.arguments(Mono.error(Exception::new), HttpStatus.INTERNAL_SERVER_ERROR)
         );
+    }
+
+    @Test
+    public void testLoadUpdatePlaylist() throws JobInstanceAlreadyCompleteException, JobExecutionAlreadyRunningException,
+            JobParametersInvalidException, JobRestartException {
+        final JobExecution expectedJobExecution = MetaDataInstanceFactory.createJobExecution();
+
+        when(jobLauncher.run(any(Job.class), any(JobParameters.class))).thenReturn(expectedJobExecution);
+
+        webClient.post()
+                .uri("/api/v1/loadupdateplaylist")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status").isNotEmpty()
+                .jsonPath("$.status").isEqualTo("STARTING")
+                .jsonPath("$.exitStatus.exitCode").isNotEmpty()
+                .jsonPath("$.exitStatus.exitCode").isEqualTo("UNKNOWN");
+
+        verify(jobLauncher, times(1)).run(any(Job.class), any(JobParameters.class));
     }
 
 }

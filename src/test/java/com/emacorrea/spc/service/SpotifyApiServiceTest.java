@@ -7,6 +7,9 @@ import java.time.Duration;
 import java.util.stream.Stream;
 
 import com.emacorrea.spc.config.SpotifyApiConfig;
+import com.emacorrea.spc.spotify.SpotifyAuthResponse;
+import com.emacorrea.spc.spotify.SpotifyTopTracksResponse;
+import com.emacorrea.spc.spotify.SpotifyUpdatePlaylistResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -28,9 +31,6 @@ import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-import spotify.SpotifyAuthResponse;
-import spotify.SpotifyTopTracksResponse;
-import spotify.SpotifyUpdatePlaylistResponse;
 
 @SpringBootTest(classes = {
         SpotifyApiConfig.class

@@ -25,4 +25,7 @@ public class AppConstants {
 //    public static final String MSG_INTERNAL_SERVER_ERROR = "Internal Server Error";
     public static final String MSG_TOO_MANY_REQUESTS = "Internal Server Error";
 
+    // Job related
+    public static final String CURRENT_TIME = "currentTime";
+
 }

@@ -6,14 +6,17 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.*;
+import org.springframework.batch.core.launch.JobLauncher;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
-import spotify.SpotifyTopTracksResponse;
-import spotify.SpotifyUpdatePlaylistResponse;
+import com.emacorrea.spc.spotify.SpotifyTopTracksResponse;
+import com.emacorrea.spc.spotify.SpotifyUpdatePlaylistResponse;
 
 import javax.validation.Valid;
 
@@ -21,12 +24,22 @@ import javax.validation.Valid;
 @Api(tags = "Spotify Playlist Creator API")
 @RestController
 @RequestMapping(path = "/api/v1/", produces = MediaType.APPLICATION_JSON_VALUE)
-@RequiredArgsConstructor
 @Validated
 @Slf4j
 public class Controller {
 
     private final SpotifyApiService spotifyApiService;
+    private final JobLauncher jobLauncher;
+    private final Job job;
+
+    @Autowired
+    public Controller(SpotifyApiService spotifyApiService,
+                      @Qualifier("asyncJobLauncher") JobLauncher jobLauncher,
+                      @Qualifier("updatePlaylistJob") Job job) {
+        this.spotifyApiService = spotifyApiService;
+        this.jobLauncher = jobLauncher;
+        this.job = job;
+    }
 
     /**
      * Returns a list of the user's top tracks in Spotify
@@ -73,6 +86,18 @@ public class Controller {
         return spotifyApiService.updatePlaylist(itemUris)
                 .doOnSuccess(response -> log.info("Successfully replaced playlist items: {}", response.getSnapshotId()))
                 .doOnError(error -> log.error("Error replacing playlist items: {}", error.getMessage()));
+    }
+
+    /**
+     * Load Update Playlist job.
+     * @return the status of the initiated update playlist job
+     */
+    @PostMapping("/loadupdateplaylist")
+    public JobExecution loadUpdatePlaylist() throws JobExecutionException {
+        final JobParameters jobParameters = new JobParametersBuilder()
+                .addLong(AppConstants.CURRENT_TIME, System.currentTimeMillis())
+                .toJobParameters();
+        return jobLauncher.run(job, jobParameters);
     }
 
     // TODO: Add an endpoint to retrieve the current weekly top tracks playlist

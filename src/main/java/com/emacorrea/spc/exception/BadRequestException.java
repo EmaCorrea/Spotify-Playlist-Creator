@@ -11,6 +11,8 @@ import lombok.ToString;
 @ResponseStatus(HttpStatus.BAD_REQUEST)
 public class BadRequestException extends ApiException {
 
+    private static final long serialVersionUID = -1658835336361768385L;
+
     public BadRequestException(final String msg) {
         super(HttpStatus.BAD_REQUEST, msg);
     }

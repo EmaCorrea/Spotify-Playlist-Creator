@@ -11,6 +11,8 @@ import lombok.ToString;
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
 public class UnauthorizedException extends ApiException {
 
+    private static final long serialVersionUID = 775500509488920953L;
+
     public UnauthorizedException(final String msg) {
         super(HttpStatus.UNAUTHORIZED, msg);
     }

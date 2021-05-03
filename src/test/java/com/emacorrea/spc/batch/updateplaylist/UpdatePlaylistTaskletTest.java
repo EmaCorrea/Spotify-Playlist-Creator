@@ -15,8 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import reactor.core.publisher.Mono;
-import spotify.SpotifyTopTracksResponse;
-import spotify.SpotifyUpdatePlaylistResponse;
+import com.emacorrea.spc.spotify.SpotifyTopTracksResponse;
+import com.emacorrea.spc.spotify.SpotifyUpdatePlaylistResponse;
 
 import static org.mockito.Mockito.*;
 

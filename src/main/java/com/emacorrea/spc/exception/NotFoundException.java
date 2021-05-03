@@ -11,6 +11,8 @@ import lombok.ToString;
 @ResponseStatus(HttpStatus.NOT_FOUND)
 public class NotFoundException extends ApiException {
 
+    private static final long serialVersionUID = 80030580256848832L;
+
     public NotFoundException(final String msg) {
         super(HttpStatus.NOT_FOUND, msg);
     }

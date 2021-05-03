@@ -26,5 +26,5 @@ public class SpotifyApiConfig {
     @Value("${spotify.authUri}")
     private String authUri;
 
-    private final String scheme = "https";
+    private String scheme = "https";
 }

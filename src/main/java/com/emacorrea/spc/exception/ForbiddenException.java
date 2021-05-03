@@ -11,6 +11,8 @@ import lombok.ToString;
 @ResponseStatus(HttpStatus.FORBIDDEN)
 public class ForbiddenException extends ApiException {
 
+    private static final long serialVersionUID = -3953279557621705064L;
+
     public ForbiddenException(final String msg) {
         super(HttpStatus.FORBIDDEN, msg);
     }

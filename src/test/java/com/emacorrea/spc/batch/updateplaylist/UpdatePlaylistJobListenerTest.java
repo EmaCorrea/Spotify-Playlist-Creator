@@ -34,9 +34,9 @@ public class UpdatePlaylistJobListenerTest {
         jobExecution = MetaDataInstanceFactory.createJobExecution();
         jobExplorer = mock(JobExplorer.class);
         jobOperator = mock(JobOperator.class);
-        JobRepository jobRepository = mock(JobRepository.class);
+        final JobRepository jobRepository = mock(JobRepository.class);
 
-        JobInstance jobInstance = new JobInstance(1L, "updatePlaylistJob");
+        final JobInstance jobInstance = new JobInstance(1L, "updatePlaylistJob");
 
         jobExecution.setJobInstance(jobInstance);
         jobExecution.setStartTime(new Date());
