@@ -14,7 +14,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -32,11 +31,18 @@ import okhttp3.mockwebserver.MockWebServer;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import static org.junit.Assert.assertEquals;
+
 @SpringBootTest(classes = {
         SpotifyApiConfig.class
 })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@SuppressWarnings("PMD.UnusedPrivateMethod")
 public class SpotifyApiServiceTest {
+
+    private static final String TEST_ACCESS_TOKEN = "testAcessToken";
+    private static final String TEST_TOKEN_TYPE = "testTokenType";
+    private static final String TEST_TOKEN_SCOPE = "testScope";
 
     private MockWebServer spotifyServer;
     private ObjectMapper objectMapper;
@@ -69,10 +75,10 @@ public class SpotifyApiServiceTest {
     @Test
     public void testGetUsersTopTracks() throws JsonProcessingException {
         final SpotifyAuthResponse spotifyAuthResponse = SpotifyAuthResponse.builder()
-                .accessToken("testAcessToken")
-                .tokenType("testTokenType")
+                .accessToken(TEST_ACCESS_TOKEN)
+                .tokenType(TEST_TOKEN_TYPE)
                 .expiresIn(1000)
-                .scope("testScope")
+                .scope(TEST_TOKEN_SCOPE)
                 .build();
 
         final SpotifyTopTracksResponse expectedSpotifyTopTracksResponse = SpotifyTopTracksResponse.builder()
@@ -98,7 +104,7 @@ public class SpotifyApiServiceTest {
                 .expectComplete()
                 .verify();
 
-        Assertions.assertEquals(2, spotifyServer.getRequestCount());
+        assertEquals(2, spotifyServer.getRequestCount());
     }
 
     @ParameterizedTest(name = "{displayName} #{index}: {arguments}")
@@ -106,10 +112,10 @@ public class SpotifyApiServiceTest {
     public void testGetUsersTopTracksError(String errorBody, int errorCode,
                                            String errorException, String expectedErrorMsg) throws JsonProcessingException {
         final SpotifyAuthResponse spotifyAuthResponse = SpotifyAuthResponse.builder()
-                .accessToken("testAcessToken")
-                .tokenType("testTokenType")
+                .accessToken(TEST_ACCESS_TOKEN)
+                .tokenType(TEST_TOKEN_TYPE)
                 .expiresIn(1000)
-                .scope("testScope")
+                .scope(TEST_TOKEN_SCOPE)
                 .build();
 
         spotifyServer.enqueue(new MockResponse()
@@ -128,7 +134,7 @@ public class SpotifyApiServiceTest {
                         throwable.getMessage().equals(expectedErrorMsg))
                 .verify();
 
-        Assertions.assertEquals(2, spotifyServer.getRequestCount());
+        assertEquals(2, spotifyServer.getRequestCount());
     }
 
     private static Stream<Arguments> testGetUsersTopTracksErrorArgsProvider() {
@@ -151,10 +157,10 @@ public class SpotifyApiServiceTest {
     @Test
     public void testGetUsersTopTracksRetry() throws JsonProcessingException {
         final SpotifyAuthResponse spotifyAuthResponse = SpotifyAuthResponse.builder()
-                .accessToken("testAcessToken")
-                .tokenType("testTokenType")
+                .accessToken(TEST_ACCESS_TOKEN)
+                .tokenType(TEST_TOKEN_TYPE)
                 .expiresIn(1000)
-                .scope("testScope")
+                .scope(TEST_TOKEN_SCOPE)
                 .build();
 
         final SpotifyTopTracksResponse expectedSpotifyTopTracksResponse = SpotifyTopTracksResponse.builder()
@@ -181,16 +187,16 @@ public class SpotifyApiServiceTest {
                 .expectComplete()
                 .verify();
 
-        Assertions.assertEquals(2, spotifyServer.getRequestCount());
+        assertEquals(2, spotifyServer.getRequestCount());
     }
 
     @Test
     public void testUpdatePlaylist() throws JsonProcessingException {
         final SpotifyAuthResponse spotifyAuthResponse = SpotifyAuthResponse.builder()
-                .accessToken("testAcessToken")
-                .tokenType("testTokenType")
+                .accessToken(TEST_ACCESS_TOKEN)
+                .tokenType(TEST_TOKEN_TYPE)
                 .expiresIn(1000)
-                .scope("testScope")
+                .scope(TEST_TOKEN_SCOPE)
                 .build();
 
         final SpotifyUpdatePlaylistResponse expectedSpotifyUpdatePlaylistResponse = SpotifyUpdatePlaylistResponse.builder()
@@ -213,7 +219,7 @@ public class SpotifyApiServiceTest {
                 .expectComplete()
                 .verify();
 
-        Assertions.assertEquals(2, spotifyServer.getRequestCount());
+        assertEquals(2, spotifyServer.getRequestCount());
     }
 
     @ParameterizedTest(name = "{displayName} #{index}: {arguments}")
@@ -221,10 +227,10 @@ public class SpotifyApiServiceTest {
     public void testUpdatePlaylistError(String errorBody, int errorCode,
                                            String errorException, String expectedErrorMsg) throws JsonProcessingException {
         final SpotifyAuthResponse spotifyAuthResponse = SpotifyAuthResponse.builder()
-                .accessToken("testAcessToken")
-                .tokenType("testTokenType")
+                .accessToken(TEST_ACCESS_TOKEN)
+                .tokenType(TEST_TOKEN_TYPE)
                 .expiresIn(1000)
-                .scope("testScope")
+                .scope(TEST_TOKEN_SCOPE)
                 .build();
 
         spotifyServer.enqueue(new MockResponse()
@@ -244,7 +250,7 @@ public class SpotifyApiServiceTest {
                         throwable.getMessage().equals(expectedErrorMsg))
                 .verify();
 
-        Assertions.assertEquals(2, spotifyServer.getRequestCount());
+        assertEquals(2, spotifyServer.getRequestCount());
     }
 
     private static Stream<Arguments> testUpdatePlaylistErrorArgsProvider() {
@@ -267,10 +273,10 @@ public class SpotifyApiServiceTest {
     @Test
     public void testUpdatePlaylistRetry() throws JsonProcessingException {
         final SpotifyAuthResponse spotifyAuthResponse = SpotifyAuthResponse.builder()
-                .accessToken("testAcessToken")
-                .tokenType("testTokenType")
+                .accessToken(TEST_ACCESS_TOKEN)
+                .tokenType(TEST_TOKEN_TYPE)
                 .expiresIn(1000)
-                .scope("testScope")
+                .scope(TEST_TOKEN_SCOPE)
                 .build();
 
         final SpotifyUpdatePlaylistResponse expectedSpotifyUpdatePlaylistResponse = SpotifyUpdatePlaylistResponse.builder()
@@ -293,7 +299,7 @@ public class SpotifyApiServiceTest {
                 .expectComplete()
                 .verify();
 
-        Assertions.assertEquals(2, spotifyServer.getRequestCount());
+        assertEquals(2, spotifyServer.getRequestCount());
     }
 
 }

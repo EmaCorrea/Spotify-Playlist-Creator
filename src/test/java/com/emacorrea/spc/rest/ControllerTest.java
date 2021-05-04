@@ -2,6 +2,7 @@ package com.emacorrea.spc.rest;
 
 import com.emacorrea.spc.exception.*;
 import com.emacorrea.spc.service.SpotifyApiService;
+import com.emacorrea.spc.spotify.SpotifyPlaylistTracksResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,6 +50,7 @@ public class ControllerTest {
 
     @MockBean
     @Qualifier("updatePlaylistJob")
+    @SuppressWarnings("PMD.UnusedPrivateField")
     private Job job;
 
     @MockBean
@@ -128,15 +130,45 @@ public class ControllerTest {
         verify(spotifyApiService, times(1)).updatePlaylist(anyString());
     }
 
-    private static Stream<Arguments> testEndpointsArgsProvider() {
-        return Stream.of(
-                Arguments.arguments(Mono.error(BadRequestException::new), HttpStatus.BAD_REQUEST),
-                Arguments.arguments(Mono.error(UnauthorizedException::new), HttpStatus.UNAUTHORIZED),
-                Arguments.arguments(Mono.error(ForbiddenException::new), HttpStatus.FORBIDDEN),
-                Arguments.arguments(Mono.error(NotFoundException::new), HttpStatus.NOT_FOUND),
-                Arguments.arguments(Mono.error(TooManyRequestsException::new), HttpStatus.TOO_MANY_REQUESTS),
-                Arguments.arguments(Mono.error(Exception::new), HttpStatus.INTERNAL_SERVER_ERROR)
-        );
+    @Test
+    public void testGetPlaylist() {
+        final SpotifyPlaylistTracksResponse spotifyPlaylistTracksResponse = SpotifyPlaylistTracksResponse.builder()
+                .items(new SpotifyPlaylistTracksResponse.Item[] {
+                        new SpotifyPlaylistTracksResponse.Item(new SpotifyPlaylistTracksResponse.Track(
+                                "testTrackName", new SpotifyPlaylistTracksResponse.Artist[]{
+                                new SpotifyPlaylistTracksResponse.Artist("testArtistName")
+                        }
+                        ))
+                })
+                .build();
+
+        when(spotifyApiService.getPlaylist(anyString())).thenReturn(Mono.just(spotifyPlaylistTracksResponse));
+
+        webClient.get()
+                .uri(String.format("/api/v1/playlist?playlistId=%s", "testPlaylistId"))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.items").isNotEmpty()
+                .jsonPath("$.items[0].track").isNotEmpty()
+                .jsonPath("$.items[0].track.name").isEqualTo("testTrackName")
+                .jsonPath("$.items[0].track.artists").isNotEmpty()
+                .jsonPath("$.items[0].track.artists[0].name").isEqualTo("testArtistName");
+
+        verify(spotifyApiService, times(1)).getPlaylist(anyString());
+    }
+
+    @ParameterizedTest(name = "{displayName} #{index}: {arguments}")
+    @MethodSource("testEndpointsArgsProvider")
+    public void testGetPlaylistErrorResponses(Mono<Object> exception, HttpStatus httpStatus) {
+        doReturn(exception).when(spotifyApiService).getPlaylist(anyString());
+
+        webClient.get()
+                .uri(String.format("/api/v1/playlist?playlistId=%s", "testPlaylistId"))
+                .exchange()
+                .expectStatus().isEqualTo(httpStatus);
+
+        verify(spotifyApiService, times(1)).getPlaylist(anyString());
     }
 
     @Test
@@ -157,6 +189,18 @@ public class ControllerTest {
                 .jsonPath("$.exitStatus.exitCode").isEqualTo("UNKNOWN");
 
         verify(jobLauncher, times(1)).run(any(Job.class), any(JobParameters.class));
+    }
+
+    @SuppressWarnings("PMD.UnusedPrivateMethod")
+    private static Stream<Arguments> testEndpointsArgsProvider() {
+        return Stream.of(
+                Arguments.arguments(Mono.error(BadRequestException::new), HttpStatus.BAD_REQUEST),
+                Arguments.arguments(Mono.error(UnauthorizedException::new), HttpStatus.UNAUTHORIZED),
+                Arguments.arguments(Mono.error(ForbiddenException::new), HttpStatus.FORBIDDEN),
+                Arguments.arguments(Mono.error(NotFoundException::new), HttpStatus.NOT_FOUND),
+                Arguments.arguments(Mono.error(TooManyRequestsException::new), HttpStatus.TOO_MANY_REQUESTS),
+                Arguments.arguments(Mono.error(Exception::new), HttpStatus.INTERNAL_SERVER_ERROR)
+        );
     }
 
 }

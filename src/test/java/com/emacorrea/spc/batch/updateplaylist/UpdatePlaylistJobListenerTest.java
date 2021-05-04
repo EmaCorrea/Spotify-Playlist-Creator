@@ -55,8 +55,8 @@ public class UpdatePlaylistJobListenerTest {
 
     @Test
     public void testStoppedCurrentJob() {
-        JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
-        JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
+        final JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
+        final JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
 
         jobExecution1.setId(1L);
         jobExecution1.setStartTime(new Date());
@@ -79,8 +79,8 @@ public class UpdatePlaylistJobListenerTest {
 
     @Test
     public void testStoppedCurrentJobException() throws NoSuchJobExecutionException, JobExecutionNotRunningException {
-        JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
-        JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
+        final JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
+        final JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
 
         jobExecution1.setId(1L);
         jobExecution1.setStartTime(new Date());
@@ -111,8 +111,8 @@ public class UpdatePlaylistJobListenerTest {
 
     @Test
     public void testStoppedStalledJob() {
-        JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
-        JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
+        final JobExecution jobExecution1 = MetaDataInstanceFactory.createJobExecution();
+        final JobExecution jobExecution2 = MetaDataInstanceFactory.createJobExecution();
 
         jobExecution1.setId(1L);
         jobExecution1.setStartTime(new Date());

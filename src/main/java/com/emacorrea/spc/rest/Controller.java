@@ -2,6 +2,7 @@ package com.emacorrea.spc.rest;
 
 import com.emacorrea.spc.AppConstants;
 import com.emacorrea.spc.service.SpotifyApiService;
+import com.emacorrea.spc.spotify.SpotifyPlaylistTracksResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -85,6 +86,30 @@ public class Controller {
             @Valid @RequestParam final String itemUris) {
         return spotifyApiService.updatePlaylist(itemUris)
                 .doOnSuccess(response -> log.info("Successfully replaced playlist items: {}", response.getSnapshotId()))
+                .doOnError(error -> log.error("Error replacing playlist items: {}", error.getMessage()));
+    }
+
+    /**
+     * Returns confirmation that a Spotify playlist's items were replaces/updated
+     * @return playlist replacement confirmation
+     */
+    @ApiOperation(value = "Retrieve tracks in order from a specified Spotify playlist",
+            httpMethod = AppConstants.HTTP_METHOD_GET,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = AppConstants.MSG_SUCCESS),
+            @ApiResponse(code = 400, message = AppConstants.MSG_BAD_REQUEST),
+            @ApiResponse(code = 401, message = AppConstants.MSG_UNAUTHORIZED),
+            @ApiResponse(code = 403, message = AppConstants.MSG_FORBIDDEN),
+            @ApiResponse(code = 404, message = AppConstants.MSG_NOT_FOUND),
+            @ApiResponse(code = 429, message = AppConstants.MSG_TOO_MANY_REQUESTS)
+    })
+    @GetMapping("/playlist")
+    public Mono<SpotifyPlaylistTracksResponse> getPlaylist(
+            @Valid @RequestParam final String playlistId) {
+        return spotifyApiService.getPlaylist(playlistId)
+                .doOnSuccess(response -> log.info("Successfully retrieved playlist items: {}", response.toString()))
                 .doOnError(error -> log.error("Error replacing playlist items: {}", error.getMessage()));
     }
 

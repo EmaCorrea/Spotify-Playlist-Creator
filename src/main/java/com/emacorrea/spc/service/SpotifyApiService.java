@@ -2,6 +2,7 @@ package com.emacorrea.spc.service;
 
 import com.emacorrea.spc.config.SpotifyApiConfig;
 import com.emacorrea.spc.exception.*;
+import com.emacorrea.spc.spotify.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -15,10 +16,6 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-import com.emacorrea.spc.spotify.SpotifyApiErrorResponse;
-import com.emacorrea.spc.spotify.SpotifyAuthResponse;
-import com.emacorrea.spc.spotify.SpotifyTopTracksResponse;
-import com.emacorrea.spc.spotify.SpotifyUpdatePlaylistResponse;
 
 import java.time.Duration;
 @Slf4j
@@ -69,6 +66,20 @@ public class SpotifyApiService {
                 .retrieve()
                 .onStatus(HttpStatus::is4xxClientError, SpotifyApiService::mapError)
                 .bodyToMono(SpotifyUpdatePlaylistResponse.class)
+                .retryWhen(retrySpec());
+    }
+
+    public Mono<SpotifyPlaylistTracksResponse> getPlaylist(String playlistId) {
+        authorizationCodeRefresh();
+        return spotifyClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path(String.format("/v1/playlists/%s/tracks", playlistId))
+//                        .queryParam("uris", playlistId)
+//                        .queryParam("limit", "20")
+                        .build())
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError, SpotifyApiService::mapError)
+                .bodyToMono(SpotifyPlaylistTracksResponse.class)
                 .retryWhen(retrySpec());
     }
 
