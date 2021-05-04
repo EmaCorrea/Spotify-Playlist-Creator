@@ -5,6 +5,7 @@ buildscript {
 		lombokVersion = '1.18.+'
 		spotifyWebApiVersion = '6.5.+'
 		springfoxVersion = '3.0.+'
+		okhttpVersion = '4.9.+'
 	}
 }
 
@@ -12,6 +13,7 @@ plugins {
 	id 'org.springframework.boot' version "$springBootVersion"
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'pmd'
 }
 
 group = 'com.emacorrea'
@@ -26,10 +28,6 @@ dependencies {
 	annotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
 	compileOnly "org.projectlombok:lombok:$lombokVersion"
-//	compileOnly "se.michaelthelin.spotify:spotify-web-api-java:$spotifyWebApiVersion"
-
-//	implementation group: 'se.michaelthelin.spotify', name: 'spotify-web-api-java', version: '6.5.2'
-	implementation "se.michaelthelin.spotify:spotify-web-api-java:$spotifyWebApiVersion"
 
 	// Spring Boot
 	implementation 'org.springframework.boot:spring-boot-starter'
@@ -54,10 +52,18 @@ dependencies {
 
 	testCompileOnly "org.projectlombok:lombok:$lombokVersion"
 
-//	testCompileOnly "se.michaelthelin.spotify:spotify-web-api-java:$spotifyWebApiVersion"
-
+	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation "org.springframework.batch:spring-batch-test"
+	testImplementation "com.squareup.okhttp3:mockwebserver:$okhttpVersion"
+	testImplementation "com.squareup.okhttp3:okhttp:$okhttpVersion"
+}
+
+pmd {
+	ignoreFailures  = false // Evaluation must pass
+	pmdTest.enabled = true // Disable quality checks on unit test code
+	ruleSetFiles = files("config/pmd/ruleset.xml") // rules to be executed are loaded from file
+	ruleSets = []
 }
 
 test {

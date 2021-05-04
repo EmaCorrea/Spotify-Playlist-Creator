@@ -28,14 +28,14 @@ public class UpdatePlaylistJobListener implements JobExecutionListener {
     private static final int MAX_NUMBER_RUNNING_JOBS = 1;
 
     private final JobExplorer jobExplorer;
-    private final JobRepository jobRepository;
     private final JobOperator jobOperator;
+    private final JobRepository jobRepository;
 
     @Override
     public void beforeJob(JobExecution jobExecution) {
-        String jobName = jobExecution.getJobInstance().getJobName();
+        final String jobName = jobExecution.getJobInstance().getJobName();
         verifyStalledJobs(jobExecution);
-        Set<JobExecution> executions = jobExplorer.findRunningJobExecutions(jobName);
+        final Set<JobExecution> executions = jobExplorer.findRunningJobExecutions(jobName);
 
         if (executions.size() > MAX_NUMBER_RUNNING_JOBS) {
             log.info("Job {} is already running", jobName);
@@ -49,8 +49,8 @@ public class UpdatePlaylistJobListener implements JobExecutionListener {
 
     @Override
     public void afterJob(JobExecution jobExecution) {
-        String jobName = jobExecution.getJobInstance().getJobName();
-        long elapsedTime = jobExecution.getEndTime().getTime() - jobExecution.getCreateTime().getTime();
+        final String jobName = jobExecution.getJobInstance().getJobName();
+        final long elapsedTime = jobExecution.getEndTime().getTime() - jobExecution.getCreateTime().getTime();
 
         log.info("Job {} completed - status: {}, elapsed time: {}s",
                 jobName,
@@ -64,16 +64,16 @@ public class UpdatePlaylistJobListener implements JobExecutionListener {
      * @param currentJob current job execution
      */
     private void verifyStalledJobs(JobExecution currentJob) {
-        String jobName = currentJob.getJobInstance().getJobName();
-        Set<JobExecution> executions = jobExplorer.findRunningJobExecutions(jobName);
+        final String jobName = currentJob.getJobInstance().getJobName();
+        final Set<JobExecution> executions = jobExplorer.findRunningJobExecutions(jobName);
 
-        for (JobExecution jobExecution : executions) {
-            String jobStatus = jobExecution.getStatus().toString();
-            String jobExitCode = jobExecution.getExitStatus().getExitCode();
+        for (final JobExecution jobExecution : executions) {
+            final String jobStatus = jobExecution.getStatus().toString();
+            final String jobExitCode = jobExecution.getExitStatus().getExitCode();
 
-            LocalDateTime jobStartTime = convertToLocalDateTime(jobExecution.getStartTime());
-            LocalDateTime currentJobStartTime = convertToLocalDateTime(currentJob.getStartTime());
-            Duration jobStartDuration = Duration.between(jobStartTime, currentJobStartTime);
+            final LocalDateTime jobStartTime = convertToLocalDateTime(jobExecution.getStartTime());
+            final LocalDateTime currentJobStartTime = convertToLocalDateTime(currentJob.getStartTime());
+            final Duration jobStartDuration = Duration.between(jobStartTime, currentJobStartTime);
 
             // If the job has no end time, its status and exit code are set to STARTED and UNKNOWN respectively,
             // and it was started 1 or more hours ago then stop it
@@ -84,11 +84,11 @@ public class UpdatePlaylistJobListener implements JobExecutionListener {
     }
 
     private void stopJob(JobExecution jobExecution) {
-        String jobName = jobExecution.getJobInstance().getJobName();
-        long jobId = jobExecution.getId();
-        Date jobStartTime = jobExecution.getStartTime();
-        String exitCode = BatchStatus.STOPPED.toString();
-        String exitDescription = "Job was stalled or interrupted and has been stopped.";
+        final String jobName = jobExecution.getJobInstance().getJobName();
+        final long jobId = jobExecution.getId();
+        final Date jobStartTime = jobExecution.getStartTime();
+        final String exitCode = BatchStatus.STOPPED.toString();
+        final String exitDescription = "Job was stalled or interrupted and has been stopped.";
 
         jobExecution.setStatus(BatchStatus.STOPPED);
         jobExecution.setEndTime(new Date());

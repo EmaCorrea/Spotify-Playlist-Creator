@@ -9,12 +9,16 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.explore.JobExplorer;
+import org.springframework.batch.core.launch.JobLauncher;
 import org.springframework.batch.core.launch.JobOperator;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.launch.support.SimpleJobLauncher;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.SyncTaskExecutor;
 
 @Configuration
 @EnableBatchProcessing
@@ -36,16 +40,29 @@ public class BatchConfiguration {
     private JobOperator jobOperator;
 
     @Autowired
-    private SpotifyApiConfig spotifyApiConfig;
-
-    @Autowired
     private SpotifyApiService spotifyApiService;
+
+    @Bean
+    public JobLauncher asyncJobLauncher() {
+        final SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
+        jobLauncher.setJobRepository(jobRepo);
+        jobLauncher.setTaskExecutor(new SimpleAsyncTaskExecutor());
+        return jobLauncher;
+    }
+
+    @Bean
+    public JobLauncher jobLauncher() {
+        final SimpleJobLauncher jobLauncher = new SimpleJobLauncher();
+        jobLauncher.setJobRepository(jobRepo);
+        jobLauncher.setTaskExecutor(new SyncTaskExecutor());
+        return jobLauncher;
+    }
 
     @Bean
     public Job updatePlaylistJob() {
         return jobBuilderFactory.get("updatePlaylistJob")
                 .incrementer(new RunIdIncrementer())
-                .listener(new UpdatePlaylistJobListener(jobExplorer, jobRepo, jobOperator))
+                .listener(new UpdatePlaylistJobListener(jobExplorer, jobOperator, jobRepo))
                 .preventRestart()
                 .start(updatePlaylistStep())
                 .build();

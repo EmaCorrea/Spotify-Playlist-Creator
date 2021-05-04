@@ -2,9 +2,6 @@ package com.emacorrea.spc;
 
 import com.emacorrea.spc.config.SwaggerConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,24 +18,17 @@ import java.net.URI;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 import static org.springframework.web.reactive.function.server.ServerResponse.temporaryRedirect;
 
-// TODO: Add SpotBugs/PMD to app
-// TODO: Add Vault to store client id/secrets and refresh token secrets
 // TODO: Add datasource/databse configuration for spring batch tables
-// TODO: Add task executor set to job launcher
 // TODO: Update swagger UI
 // TODO: Create Postman suite for this api
+// TODO: Set up docker-compose
+// TODO: Remove JDBC libs and other unused libs/dependencies
 @Slf4j
 @SpringBootApplication
 @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class})
 @ComponentScan(basePackageClasses = { Application.class, AppConstants.class })
 @EnableScheduling
 public class Application {
-
-	@Autowired
-	JobLauncher jobLauncher;
-
-	@Autowired
-	Job job;
 
 	public static void main(final String[] args) {
 		SpringApplication.run(Application.class);

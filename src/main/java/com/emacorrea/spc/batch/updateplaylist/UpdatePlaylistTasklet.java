@@ -8,13 +8,16 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import reactor.core.publisher.Mono;
+import com.emacorrea.spc.spotify.SpotifyTopTracksResponse;
 
 import javax.validation.constraints.NotNull;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class UpdatePlaylistTasklet implements Tasklet {
 
-    private SpotifyApiService spotifyApiService;
+    private final SpotifyApiService spotifyApiService;
 
     @Autowired
     public UpdatePlaylistTasklet(@NotNull SpotifyApiService spotifyApiService) {
@@ -23,12 +26,22 @@ public class UpdatePlaylistTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-        Mono<String> topTracksResponse = spotifyApiService.getUsersTopTracksUris();
+        final Mono<SpotifyTopTracksResponse> topTracksResponse = spotifyApiService.getUsersTopTracks();
 
         topTracksResponse
-                .doOnNext(itemUris -> spotifyApiService.replacePlaylistItems(itemUris))
-                .doOnSuccess(r -> log.info("Successfully replaced playlist items"))
-                .doOnError(e -> log.error("Error replacing playlist items: {}", e.getMessage()))
+                .doOnSuccess(responseTopTracks -> {
+                    log.info("Successfully retrieved user's top tracks: {}", responseTopTracks.toString());
+
+                    final String test = Arrays.stream(responseTopTracks.getItems())
+                            .map(item -> item.getTrackUri())
+                            .collect(Collectors.joining(","));
+
+                    spotifyApiService.updatePlaylist(test)
+                            .doOnSuccess(responseUpdate -> log.info("Successfully replaced playlist items: {}", responseUpdate.getSnapshotId()))
+                            .doOnError(error -> log.error("Error replacing playlist items: {}", error.getMessage()))
+                            .subscribe();
+                })
+                .doOnError(error -> log.error("Error retrieving user's top tracks: {}", error.getMessage()))
                 .subscribe();
 
         return RepeatStatus.FINISHED;

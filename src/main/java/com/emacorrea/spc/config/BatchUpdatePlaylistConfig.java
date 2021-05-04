@@ -40,7 +40,7 @@ public class BatchUpdatePlaylistConfig {
             try {
                 log.info("Updating Spotify playlist...");
 
-                JobParameters jobParams = new JobParametersBuilder()
+                final JobParameters jobParams = new JobParametersBuilder()
                         .addString("updatePlaylistJob", String.valueOf(System.currentTimeMillis()))
                         .toJobParameters();
                 jobLauncher.run(job, jobParams);
