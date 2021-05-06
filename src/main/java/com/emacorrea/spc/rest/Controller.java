@@ -117,14 +117,12 @@ public class Controller {
      * Load Update Playlist job.
      * @return the status of the initiated update playlist job
      */
-    @PostMapping("/loadupdateplaylist")
+    @GetMapping("/loadupdateplaylist")
     public JobExecution loadUpdatePlaylist() throws JobExecutionException {
         final JobParameters jobParameters = new JobParametersBuilder()
                 .addLong(AppConstants.CURRENT_TIME, System.currentTimeMillis())
                 .toJobParameters();
         return jobLauncher.run(job, jobParameters);
     }
-
-    // TODO: Add an endpoint to retrieve the current weekly top tracks playlist
 
 }

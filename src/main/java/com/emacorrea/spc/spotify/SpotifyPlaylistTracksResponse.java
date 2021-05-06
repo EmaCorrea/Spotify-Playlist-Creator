@@ -45,10 +45,10 @@ public class SpotifyPlaylistTracksResponse {
 
     @Override
     public String toString() {
-        AtomicInteger counter = new AtomicInteger(0);
-        AtomicReference<String> playlistString = new AtomicReference<>("\nPlaylist tracks:\n");
-        AtomicReference<String> trackString = new AtomicReference<>("");
-        AtomicReference<String> artistString = new AtomicReference<>("");
+        final AtomicInteger counter = new AtomicInteger(0);
+        final AtomicReference<String> playlistString = new AtomicReference<>("\nPlaylist tracks:\n");
+        final AtomicReference<String> trackString = new AtomicReference<>("");
+        final AtomicReference<String> artistString = new AtomicReference<>("");
 
         Arrays.stream(items).forEach(track -> {
             trackString.set(track.getTrack().getName());

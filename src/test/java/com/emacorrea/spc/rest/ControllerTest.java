@@ -43,6 +43,8 @@ import static org.mockito.Mockito.*;
 public class ControllerTest {
 
     private static final String SPOTIFY_TRACK_URI = "com.emacorrea.spc.spotify:track:123456789";
+    private static final String TEST_ARTIST_NAME = "testArtistName";
+    private static final String TEST_TRACK_NAME = "testTrackName";
 
     @MockBean
     @Qualifier("asyncJobLauncher")
@@ -64,8 +66,8 @@ public class ControllerTest {
         final SpotifyTopTracksResponse spotifyTopTracksResponse = SpotifyTopTracksResponse.builder()
                 .items(new SpotifyTopTracksResponse.Item[]{
                         new SpotifyTopTracksResponse.Item(new SpotifyTopTracksResponse.Artist[]{
-                                new SpotifyTopTracksResponse.Artist("testArtistName")
-                        }, "testTrackName", "testTrackUri")
+                                new SpotifyTopTracksResponse.Artist(TEST_ARTIST_NAME)
+                        }, TEST_TRACK_NAME, "testTrackUri")
                 })
                 .build();
 
@@ -78,8 +80,8 @@ public class ControllerTest {
                 .expectBody()
                 .jsonPath("$.items").isNotEmpty()
                 .jsonPath("$.items[0].artists").isNotEmpty()
-                .jsonPath("$.items[0].artists[0].name").isEqualTo("testArtistName")
-                .jsonPath("$.items[0].name").isEqualTo("testTrackName")
+                .jsonPath("$.items[0].artists[0].name").isEqualTo(TEST_ARTIST_NAME)
+                .jsonPath("$.items[0].name").isEqualTo(TEST_TRACK_NAME)
                 .jsonPath("$.items[0].uri").isEqualTo("testTrackUri");
 
         verify(spotifyApiService, times(1)).getUsersTopTracks();
@@ -135,8 +137,8 @@ public class ControllerTest {
         final SpotifyPlaylistTracksResponse spotifyPlaylistTracksResponse = SpotifyPlaylistTracksResponse.builder()
                 .items(new SpotifyPlaylistTracksResponse.Item[] {
                         new SpotifyPlaylistTracksResponse.Item(new SpotifyPlaylistTracksResponse.Track(
-                                "testTrackName", new SpotifyPlaylistTracksResponse.Artist[]{
-                                new SpotifyPlaylistTracksResponse.Artist("testArtistName")
+                                TEST_TRACK_NAME, new SpotifyPlaylistTracksResponse.Artist[]{
+                                new SpotifyPlaylistTracksResponse.Artist(TEST_ARTIST_NAME)
                         }
                         ))
                 })
@@ -151,9 +153,9 @@ public class ControllerTest {
                 .expectBody()
                 .jsonPath("$.items").isNotEmpty()
                 .jsonPath("$.items[0].track").isNotEmpty()
-                .jsonPath("$.items[0].track.name").isEqualTo("testTrackName")
+                .jsonPath("$.items[0].track.name").isEqualTo(TEST_TRACK_NAME)
                 .jsonPath("$.items[0].track.artists").isNotEmpty()
-                .jsonPath("$.items[0].track.artists[0].name").isEqualTo("testArtistName");
+                .jsonPath("$.items[0].track.artists[0].name").isEqualTo(TEST_ARTIST_NAME);
 
         verify(spotifyApiService, times(1)).getPlaylist(anyString());
     }
